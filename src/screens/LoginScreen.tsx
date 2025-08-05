@@ -1,73 +1,75 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Image } from 'react-native';
-import { Button, TextInput, Title } from 'react-native-paper';
+import React, { useState, useContext } from 'react';
+import { View, TextInput, Button, StyleSheet, Text, Alert } from 'react-native';
+import { useAuth } from '../context/AuthContext';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../types';
 
-export default function LoginScreen({ navigation }: any) {
+type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
+
+type Props = {
+  navigation: LoginScreenNavigationProp;
+};
+
+const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { login } = useAuth();
 
-  const handleLogin = () => {
-    if (email) {
-      navigation.navigate('Main');
+  const handleLogin = async () => {
+    const success = await login(email, password);
+    if (success) {
+      navigation.replace('Home');
+    } else {
+      Alert.alert('Ошибка', 'Неверные учетные данные');
     }
   };
 
   return (
     <View style={styles.container}>
-      <Image 
-        source={{ uri: 'https://placehold.co/200x200/2e7d32/white?text=Ортопед' }} 
-        style={styles.logo} 
-      />
-      <Title style={styles.title}>Ортопед: Вход в систему</Title>
+      <Text style={styles.title}>Вход в систему</Text>
+      
       <TextInput
-        label="Email"
-        value={email}
-        onChangeText={text => setEmail(text)}
-        mode="outlined"
         style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
       />
-      <Button 
-        mode="contained" 
-        onPress={handleLogin}
-        style={styles.button}
-        labelStyle={styles.buttonLabel}
-      >
-        Войти
-      </Button>
+      
+      <TextInput
+        style={styles.input}
+        placeholder="Пароль"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+      
+      <Button title="Войти" onPress={handleLogin} />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#f5f5f5',
-  },
-  logo: {
-    width: 200,
-    height: 200,
-    alignSelf: 'center',
-    marginBottom: 30,
+    padding: 16,
   },
   title: {
-    textAlign: 'center',
-    marginBottom: 20,
     fontSize: 24,
-    color: '#333',
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
   },
   input: {
-    marginBottom: 15,
-    backgroundColor: 'white',
-  },
-  button: {
-    marginTop: 10,
-    paddingVertical: 8,
-    backgroundColor: '#2e7d32',
-  },
-  buttonLabel: {
-    fontSize: 18,
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginBottom: 12,
+    paddingHorizontal: 8,
+    borderRadius: 4,
   },
 });
+
+export default LoginScreen;
