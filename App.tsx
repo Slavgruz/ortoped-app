@@ -1,13 +1,16 @@
 import React from 'react';
-import { View, Text } from 'react-native';
-import { PaperProvider } from 'react-native-paper';
+import { NavigationContainer } from '@react-navigation/native';
+import { AuthProvider } from './context/AuthContext';
+import AppNavigator from './navigation/AppNavigator';
 
-export default function App() {
+const App = () => {
   return (
-    <PaperProvider>
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <Text style={{fontSize: 24}}>Приложение Ортопед успешно запущено!</Text>
-      </View>
-    </PaperProvider>
+    <AuthProvider>
+      <NavigationContainer>
+        <AppNavigator />
+      </NavigationContainer>
+    </AuthProvider>
   );
-}
+};
+
+export default App;
