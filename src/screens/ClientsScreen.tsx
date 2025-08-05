@@ -1,75 +1,63 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Provider as PaperProvider } from 'react-native-paper';
+import React, { useContext, useEffect, useState } from 'react';
+import { View, FlatList, Button, Text, StyleSheet } from 'react-native';
+import { useAuth } from '../context/AuthContext';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList, Client } from '../types';
+import DataService from '../services/DataService';
 
-// Импортируем все экраны
-import LoginScreen from './src/screens/LoginScreen';
-import NewDealScreen from './src/screens/NewDealScreen';
-import ClientsScreen from './src/screens/ClientsScreen'; // Импорт реального компонента
+type ClientsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Clients'>;
 
-// Временные заглушки для других экранов
-function HomeScreen() { 
-  return null; 
-}
+type Props = {
+  navigation: ClientsScreenNavigationProp;
+};
 
-function StatsScreen() { 
-  return null; 
-}
+const ClientsScreen: React.FC<Props> = ({ navigation }) => {
+  const { user } = useAuth();
+  const [clients, setClients] = useState<Client[]>([]);
 
-const Stack = createStackNavigator();
-const Tab = createBottomTabNavigator();
+  useEffect(() => {
+    loadClients();
+  }, []);
 
-function MainTabs() {
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size }) => {
-          let iconName: string = '';
+  const loadClients = async () => {
+    if (!user) return;
+    
+    const data = await DataService.getClients(user.id);
+    setClients(data);
+  };
 
-          if (route.name === 'Главная') {
-            iconName = 'home';
-          } else if (route.name === 'Клиенты') {
-            iconName = 'account-group';
-          } else if (route.name === 'Новая сделка') {
-            iconName = 'plus-circle';
-          } else if (route.name === 'Статистика') {
-            iconName = 'chart-bar';
-          }
-
-          return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#3f51b5',
-        tabBarInactiveTintColor: 'gray',
-      })}
-    >
-      <Tab.Screen name="Главная" component={HomeScreen} />
-      <Tab.Screen name="Клиенты" component={ClientsScreen} /> {/* Подключение реального компонента */}
-      <Tab.Screen name="Новая сделка" component={NewDealScreen} />
-      <Tab.Screen name="Статистика" component={StatsScreen} />
-    </Tab.Navigator>
+  const renderItem = ({ item }: { item: Client }) => (
+    <View style={styles.item}>
+      <Text style={styles.title}>{item.name}</Text>
+      <Text>{item.phone}</Text>
+      <Text>{item.city}</Text>
+      <Button 
+        title="Открыть" 
+        onPress={() => navigation.navigate('ClientDetail', { clientId: item.id })} 
+      />
+    </View>
   );
-}
 
-export default function App() {
   return (
-    <PaperProvider>
-      <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen 
-            name="Login" 
-            component={LoginScreen} 
-            options={{ headerShown: false }} 
-          />
-          <Stack.Screen 
-            name="Main" 
-            component={MainTabs} 
-            options={{ headerShown: false }} 
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </PaperProvider>
+    <View style={styles.container}>
+      <Button 
+        title="Добавить клиента" 
+        onPress={() => navigation.navigate('ClientDetail', { clientId: null })} 
+      />
+      
+      <FlatList
+        data={clients}
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
+      />
+    </View>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 16 },
+  item: { padding: 16, borderBottomWidth: 1, borderColor: '#ccc' },
+  title: { fontSize: 16, fontWeight: 'bold' }
+});
+
+export default ClientsScreen;
